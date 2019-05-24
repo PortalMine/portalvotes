@@ -26,10 +26,10 @@ The scripts are started by bash scripts started by crontab. For asking people: T
 * every four hours my optional user blacklist is updated (one_per_week.sh)
 * each half hour I try to claim rewards (claim.sh)
 
-So, for my case the crontab file (accessible by ```crontab -e```) looks like this:
+So, for my case the crontab file (accessible via ```crontab -e```) looks like this:
 ```
-00 17 30 03 * sudo sh //home/pi/portalvotes_2/start.sh
-30 17 * * * sudo sh //home/pi/portalvotes_2/post.sh
-00 */4 * * * sudo sh //home/pi/portalvotes_2/one_per_week.sh
-*/30 * * * * sudo sh //home/pi/portalvotes_2/claim.sh
+@reboot python3 //home/pi/portalvotes_2/start.sh &
+30 17 * * * python3 //home/pi/portalvotes_2/post.sh
+00 */4 * * * python3 //home/pi/portalvotes_2/one_per_week.sh
+*/30 * * * * python3 //home/pi/portalvotes_2/claim.sh
 ```
