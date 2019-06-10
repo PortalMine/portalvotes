@@ -1,5 +1,5 @@
 # portalvotes
-A further STEEM votebot derived from the "old" [curationvoter](https://github.com/PortalMine/curationvoter). Customizable with config file and stable on my RasPi.
+The further developed STEEM votebot [curationvoter](https://github.com/PortalMine/curationvoter). Customizable with config file, half automated and stable on my RasPi.
 
 ***
 ### Features
@@ -15,21 +15,22 @@ You will need a Python3.x interpreter.
 Additional python packages to install:
 * beem (essential as it is the API to connect to the STEEM blockchain)
 * configparser (if not installed with python installation, essential)
-* Markdown (used in the posting script, you don't need that if you don't publish voting report posts)
+* Markdown and bs4 (used in the posting script, you don't need that if you don't publish voting report posts)
 
 ***
 ### My Setup
-Everything is running on my Raspberry Pi 3B+ with the newest Raspbian version.
-The scripts are started by bash scripts started by crontab. For asking people: The bash scripts are nessecary, otherwise the pythin scripts would run in the root directory and couldn't find any required files like the config.ini
-* voting_loop.py is started once (start.sh)
-* everydays 17:30 a post is published (post.sh)
-* every four hours my optional user blacklist is updated (one_per_week.sh)
-* each half hour I try to claim rewards (claim.sh)
+Everything is running on my Raspberry Pi 3B+ with Raspbian.
+The scripts are started by crontab.
+* voting_loop.py is started once
+* everydays 17:30 a post is published (poster.py)
+* every four hours my optional user blacklist is updated (one_per_week.py)
+* each half hour I try to claim rewards (claim.py)
 
 So, for my case the crontab file (accessible via ```crontab -e```) looks like this:
 ```
-@reboot python3 //home/pi/portalvotes_2/start.sh &
-30 17 * * * python3 //home/pi/portalvotes_2/post.sh
-00 */4 * * * python3 //home/pi/portalvotes_2/one_per_week.sh
-*/30 * * * * python3 //home/pi/portalvotes_2/claim.sh
+@reboot cd //home/pi/portalvotes_2/ python3 voting_loop.py &
+@reboot cd //home/pi/portalvotes_2/ python3 throw_hundrets.py &
+30 17 * * * python3 //home/pi/portalvotes_2/poster.py
+00 */4 * * * python3 //home/pi/portalvotes_2/one_per_week.py
+15,45 * * * * python3 //home/pi/portalvotes_2/claim.py
 ```
