@@ -52,7 +52,9 @@ def hundred_voter():
                 shared_steem_instance().wallet.unlock(config['GENERAL']['wallet_key'])
                 c.vote(weight=config.getfloat('VOTER', 'throw_votes_pct'), account=a.name)
                 if config.getboolean('VOTER', 'write_comment'):
-                    c.reply(body=comment_body, author=config['GENERAL']['acc_name'])
+                    shared_steem_instance().post(title='', body=comment_body, author=config['GENERAL']['acc_name'],
+                                                 reply_identifier=c.authorperm,
+                                                 app='https://github.com/PortalMine/portalvotes')
                 log.debug(shared_steem_instance().broadcast())
                 shared_steem_instance().wallet.lock()
                 return True
