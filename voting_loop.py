@@ -22,15 +22,15 @@ set_shared_steem_instance(Steem(nobroadcast=config.getboolean('GENERAL', 'testin
 a = Account(account=config['GENERAL']['acc_name'])
 
 
-def vote(c):  # todo implement curation reward evaluation and adjust voting time
+def vote(c):  # maybe implement curation reward evaluation and adjust voting time per author for max rewards
     log.info('Start voting routine...')
     votes = []
     try:
         votes = c.get_votes()
-    except UnhandledRPCError as err_:
-        msg = decodeRPCErrorMsg(err_).strip()
+    except UnhandledRPCError as e:
+        msg = decodeRPCErrorMsg(e).strip()
         if not re.search("Method not found", msg):
-            raise err_
+            raise e
         else:
             log.info('No votes on this post.')
 
@@ -65,12 +65,12 @@ def vote(c):  # todo implement curation reward evaluation and adjust voting time
         shared_steem_instance().wallet.lock()
         log.info('Voted {}'.format(c.permlink))
         return True
-    except MissingKeyError as err:
-        log.exception(err)
+    except MissingKeyError as e:
+        log.exception(e)
         if not config.getboolean('GENERAL', 'testing'):
             exit(1)
-    except Exception as err:
-        log.exception(err)
+    except Exception as e:
+        log.exception(e)
         log.info('Didn\'t vote {}'.format(c.permlink))
     return False
 
@@ -86,10 +86,10 @@ def check_criteria(author, perm):  # vote the post
             check_list = file.read().split('\n')
             log.info('Loaded banned users.')
             if author in check_list:  # cancelling vote if author is on blacklist
-                log.info('Dumped because author is temporary banned. ({})'.format(author))
+                log.info('Author is temporary banned. ({})'.format(author))
                 return False
     except FileNotFoundError:
-        log.exception('Failed loading temporary banned users. Continuing without checking.')
+        log.error('Failed loading temporary banned users. Continuing without checking.')
 
     # ===== Users whitelist ==========================================================================================
     try:
@@ -97,15 +97,15 @@ def check_criteria(author, perm):  # vote the post
             check_list = file.read().split('\n')
             log.info('Loaded whitelisted users.')
             if author in check_list:  # cancelling checking if author is on whitelist
-                log.info('Bypassed filtering because author is whitelisted. ({})'.format(author))
+                log.info('Bypass filters because author is whitelisted. ({})'.format(author))
                 return vote(c)
     except FileNotFoundError:
-        log.exception('Failed loading whitelisted users. Continuing without checking.')
+        log.error('Failed loading whitelisted users. Continuing without checking.')
 
     # ===== Post length ==============================================================================================
     length = len(c.body.replace('-', '').replace('*', '').replace('_', '').split())
     if length < config.getint('VOTER', 'minimum_post_length'):
-        log.info('Dumped because of insufficient length. ({!s})'.format(length))
+        log.info('Insufficient length. ({!s})'.format(length))
         return False
 
     # ===== Users blacklist ==========================================================================================
@@ -114,10 +114,10 @@ def check_criteria(author, perm):  # vote the post
             check_list = file.read().split('\n')
             log.info('Loaded banned users.')
             if author in check_list:  # cancelling vote if author is on blacklist
-                log.info('Dumped because author is banned. ({})'.format(author))
+                log.info('Author is banned. ({})'.format(author))
                 return False
     except FileNotFoundError:
-        log.exception('Failed loading banned users. Continuing without checking.')
+        log.error('Failed loading banned users. Continuing without checking.')
 
     # ===== Words blacklist ==========================================================================================
     try:
@@ -133,24 +133,24 @@ def check_criteria(author, perm):  # vote the post
                 .replace("'", ' ').split()
             for check in check_list:  # cancelling vote if banned words are used
                 if check in post_body:
-                    log.info('Dumped because at least one word used is banned. ({})'.format(check))
+                    log.info('At least one word used is banned. ({})'.format(check))
                     return False
     except FileNotFoundError:
-        log.exception('Failed loading banned words. Continuing without checking.')
+        log.error('Failed loading banned words. Continuing without checking.')
 
     # ===== Author reputation ========================================================================================
     author_account = Account(account=author, full=False)
 
     rep = author_account.get_reputation()
     if rep < config.getfloat('VOTER', 'minimum_author_rep'):  # dumped if author rep is too low
-        log.info('Dumped for author reputation too low. ({:.2f}/{})'.format(rep, config['VOTER']['minimum_author_rep']))
+        log.info('Author reputation too low. ({:.2f}/{})'.format(rep, config['VOTER']['minimum_author_rep']))
         return False
 
     # ===== Author own SP ============================================================================================
     if config.getfloat('VOTER', 'maximum_author_own_sp') >= 0:
         sp = author_account.get_steem_power(onlyOwnSP=True)
         if sp > config.getfloat('VOTER', 'maximum_author_own_sp'):  # dumped if authors own SP is too high
-            log.info('Dumped for author own SP too high. ({!s})'.format(sp))
+            log.info('Author owns too much SP. ({!s})'.format(sp))
             return False
 
     # ===== Banned tags ==============================================================================================
@@ -158,12 +158,15 @@ def check_criteria(author, perm):  # vote the post
         with open(file=config['VOTER']['blacklist_tags'], mode='r') as file:  # banned tags
             check_list = file.read().split('\n')
             log.info('Loaded banned tags.')
+            if c.category in check_list:  # cancelling vote if author is on blacklist
+                log.info('A tag used is banned. ({})'.format(c.category))
+                return False
             for tag in c.json_metadata['tags']:
                 if tag in check_list:  # cancelling vote if author is on blacklist
-                    log.info('Dumped because a tag used is banned. ({})'.format(tag))
+                    log.info('A tag used is banned. ({})'.format(tag))
                     return False
     except FileNotFoundError:
-        log.exception('Failed loading banned tags. Continuing without checking.')
+        log.error('Failed loading banned tags. Continuing without checking.')
 
     return vote(c)
 
@@ -197,8 +200,8 @@ def scan():
                     continue
                 break
 
-        except Exception as err:
-            log.exception(err)
+        except Exception as e:
+            log.exception(e)
 
 
 # wait for enough voting power, then search for posts
@@ -248,5 +251,5 @@ while True:
         try:
             scan()
             time.sleep(15)
-        except Exception as e:
-            log.exception(e)
+        except Exception as err:
+            log.exception(err)
