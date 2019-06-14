@@ -21,16 +21,16 @@ Additional python packages to install:
 ### My Setup
 Everything is running on my Raspberry Pi 3B+ with Raspbian.
 The scripts are started by crontab.
-* voting_loop.py is started once
+* voting_loop.py and throw_hundreds.py are started at boot
 * everydays 17:30 a post is published (poster.py)
 * every four hours my optional user blacklist is updated (one_per_week.py)
 * each half hour I try to claim rewards (claim.py)
 
 So, for my case the crontab file (accessible via ```crontab -e```) looks like this:
 ```
-@reboot cd //home/pi/portalvotes_2/ python3 voting_loop.py &
-@reboot cd //home/pi/portalvotes_2/ python3 throw_hundrets.py &
-30 17 * * * python3 //home/pi/portalvotes_2/poster.py
-00 */4 * * * python3 //home/pi/portalvotes_2/one_per_week.py
-15,45 * * * * python3 //home/pi/portalvotes_2/claim.py
+@reboot cd //home/pi/portalvotes/ && python3 voting_loop.py &
+@reboot cd //home/pi/portalvotes/ && python3 throw_hundrets.py &
+30 17 * * * python3 //home/pi/portalvotes/poster.py
+00 */4 * * * python3 //home/pi/portalvotes/one_per_week.py
+15,45 * * * * python3 //home/pi/portalvotes/claim.py
 ```
