@@ -28,9 +28,9 @@ The scripts are started by crontab.
 
 So, for my case the crontab file (accessible via ```crontab -e```) looks like this:
 ```
-@reboot cd //home/pi/portalvotes/ && python3 voting_loop.py &
-@reboot cd //home/pi/portalvotes/ && python3 throw_hundrets.py &
-30 17 * * * python3 //home/pi/portalvotes/poster.py
-00 */4 * * * python3 //home/pi/portalvotes/one_per_week.py
-15,45 * * * * python3 //home/pi/portalvotes/claim.py
+@reboot cd //home/pi/portalvotes/ && sudo python3 voting_loop.py &
+@reboot cd //home/pi/portalvotes/ && sudo python3 throw_hundrets.py &
+30 17 * * * cd //home/pi/portalvotes/ && sudo python3 poster.py
+00 */4 * * * cd //home/pi/portalvotes/ && sudo python3 one_per_week.py
+15,45 * * * * cd //home/pi/portalvotes/ && sudo python3 claim.py
 ```
